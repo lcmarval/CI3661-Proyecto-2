@@ -27,3 +27,15 @@ popularidad("Bleach",8).
 popularidad("HunterXHunter",3).
 popularidad("Hamtaro",10).
 popularidad("Full Metal Alchemist",1).
+
+% funcion genero: recibir un genero y regresar un conjunto de animes.
+% capaz es inecesario, pero vemos que el genero exista.
+% preguntarGenero:- read()
+ 
+% Mejores ratings: 
+% mejores(ListaRespuestas):- findall( Anime, rating(Anime, 5) , ListaRespuestas).
+mejores:- findall( Anime, rating(Anime, 5) , ListaRespuestas), 
+          write("Estos son los mejores ratings "), write(ListaRespuestas).
+          
+% funcion conoces: para al pasar un anime determinar si esta
+% en la base de conocimientos y en caso de no ser asi agregar.
