@@ -43,7 +43,7 @@ rating("Hamtaro",2).
 rating("Full Metal Alchemist",4).
 rating("Shingeki No Kyojin",4).
 rating("Swort Art Online",3).
-rating("One Piece",2).
+rating("One Piece",5).
 rating("Ghost in the Shell",1).
 rating("Kuroko no Basket",2).
 rating("Ace of Diamond", 1).
@@ -75,25 +75,23 @@ imprimirLista([]):- !.
 imprimirLista([C|L]):- write(", "),write(C),imprimirLista(L).
 
 % Sugerencias: dado un anime retornar animes del mismo genero.
-sugerencias(A,L):- anime(A), !, generoAnime(A,G1). %luego se podria usar listadoGenero.
+sugerencias(A,L):- anime(A), !, generoAnime(A,Lg). %luego se podria usar listadoGenero.
 
 % funcion genero: recibir un genero y regresar un conjunto de animes.
-% capaz es inecesario, pero vemos que el genero exista. Rev como manejar error
+% capaz es inecesario, pero vemos que el genero exista. 
 % SE DEBE ORDENAR por rating y/o popularidad.
-%listadoGenero:- read(G), genero(G),!, 
-%findall( Ani, generoAnime(Ani, member(G)), ListaA), 
-%                write("Estos son los animes de genero "), write(ListaA). 
-
 listaGenero(Genero,Lanime):- genero(Genero), !, 
         findall( Anim, (generoAnime(Anim,ListGenero),member(Genero,ListGenero)), Lanime). 
 
 % en caso que Genero no este en genero(X)
-listaGenero(Genero,Lanime):- write(" El genero no pertenece a los que conozco").
+listaGenero(_,[]):- write(" El genero no pertenece a los que conozco").
 
-% Mejores ratings: 
-% mejores(ListaRespuestas):- findall( Anime, rating(Anime, 5) , ListaRespuestas).
-mejores:- findall( Anime, rating(Anime, 5) , ListaRespuestas), 
-          write("Estos son los animes con mejores ratings"), imprimirLista(ListaRespuestas).
+% Funcion para Poder mostar los animés con X número de estrellas 
+% dentro de cierto género (el género es un estado del chatbot que se debe conocer).
+animeEstrellas(Genero,X,La):- listaGenero(Genero,Lg),
+        findall( Anime, (member(Anime,Lg),rating(Anime, X)) , La). 
+          %write("Estos son los animes con "), write(X), 
+          %write(" estrellas de genero "), write(Genero), imprimirLista(La).
 
 % funcion conoces: para al pasar un anime determinar si esta
 % en la base de conocimientos y en caso de no ser asi agregar.
@@ -102,8 +100,8 @@ write(An), write(" tiene rating "), rating(An,R), write(R),
 write(" y genero "), generoAnime(An,Gen), write(Gen), 
 write(" , ademas es "), popularidad(An,Pop), popIntString(Pop). 
 
-estaAnime(An):- write(" Ni idea de que me hablas bro, cual es su rating y genero? "), nl,
-read(R), write(R), write("genero"), read(Gadi), genero(Gadi),!, write(Gadi), assert(anime(An)), 
+estaAnime(An):- write(" Ni idea de que me hablas bro, cual es su rating? "), nl,
+read(R), nl, write("y su genero? "), read(Gadi), genero(Gadi),!, write(Gadi), assert(anime(An)), 
 assert(generoAnime(An,Gadi)), assert(rating(An,R)),assert(popularidad(An,1)).
 
 % interesante, pero popularidad 
