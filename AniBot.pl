@@ -23,7 +23,7 @@ generoAnime("Naruto",["Shounen","Aventura"]).
 generoAnime("Dragon Ball",["Shounen"]).
 generoAnime("Bleach",["Shounen", "Sobrenatural"]).
 generoAnime("HunterXHunter",["Seinen", "Aventura"]).
-generoAnime("Hamtaro",["Kodomo", "Shounen"]).
+generoAnime("Hamtaro",["Kodomo"]).
 generoAnime("Full Metal Alchemist",["Shounen", "Magia"]).
 generoAnime("Shingeki No Kyojin",["Acción"]).
 generoAnime("Swort Art Online",["Drama", "Comedia"]).
@@ -83,10 +83,9 @@ sugerencias(A,L):- anime(A), !, generoAnime(A,G1). %luego se podria usar listado
 %listadoGenero:- read(G), genero(G),!, 
 %findall( Ani, generoAnime(Ani, member(G)), ListaA), 
 %                write("Estos son los animes de genero "), write(ListaA). 
-esGenero(Genero,Anime) :- generoAnime(Anime,ListGenero),member(Genero,ListGenero).
 
 listaGenero(Genero,Lanime):- genero(Genero), !, 
-        findall( Anim, esGenero(Genero,Anim), Lanime). 
+        findall( Anim, (generoAnime(Anim,ListGenero),member(Genero,ListGenero)), Lanime). 
 
 % en caso que Genero no este en genero(X)
 listaGenero(Genero,Lanime):- write(" El genero no pertenece a los que conozco").
