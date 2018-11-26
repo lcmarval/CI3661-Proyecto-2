@@ -74,27 +74,41 @@ popularidad("Hajime no Ippo", 1).
 imprimirLista([]):- !.
 imprimirLista([C|L]):- write(", "),write(C),imprimirLista(L).
 
-% Sugerencias: dado un anime retornar animes del mismo genero.
-sugerencias(A,L):- anime(A), !, generoAnime(A,Lg). %luego se podria usar listadoGenero.
-
 % funcion genero: recibir un genero y regresar un conjunto de animes.
-% capaz es inecesario, pero vemos que el genero exista. 
-% SE DEBE ORDENAR por rating y/o popularidad.
+% Vemos que el genero exista. 
 listaGenero(Genero,Lanime):- genero(Genero), !, 
         findall( Anim, (generoAnime(Anim,ListGenero),member(Genero,ListGenero)), Lanime). 
 
 % en caso que Genero no este en genero(X)
 listaGenero(_,[]):- write(" El genero no pertenece a los que conozco").
 
-% Funcion para Poder mostar los animés con X número de estrellas 
+listaRating(Genero,Lr):-  
+  findall( (Anim,R), (generoAnime(Anim,ListGenero),member(Genero,ListGenero),rating(Anim,R)), Lr). 
+
+listaPopularidad(Genero,Lp):-  
+  findall( (Anim,P), (generoAnime(Anim,ListGenero),member(Genero,ListGenero),popularidad(Anim,P)), Lp).
+
+listaPyR(Genero,LpYr):-
+  findall( (Anim,Y ), (generoAnime(Anim,ListGenero),member(Genero,ListGenero),popularidad(Anim,P),rating(Anim,R),Y is P+R), LpYr).
+
+% Se Ordena por rating y/o popularidad. 
+listaGeneroOrd(Lista,ListaOrd):- listaGeneroOrd(Lista,@>,ListaOrd).
+listaGeneroOrd(Lista,Ord,ListaOrd):- sort(2,Ord,Lista,ListaOrd).
+
+% Funcion para poder mostar los animés con X número de estrellas 
 % dentro de cierto género (el género es un estado del chatbot que se debe conocer).
 animeEstrellas(Genero,X,La):- listaGenero(Genero,Lg),
         findall( Anime, (member(Anime,Lg),rating(Anime, X)) , La). 
           %write("Estos son los animes con "), write(X), 
           %write(" estrellas de genero "), write(Genero), imprimirLista(La).
 
-% funcion conoces: para al pasar un anime determinar si esta
-% en la base de conocimientos y en caso de no ser asi agregar.
+% Funcion para poder mostrar los animés buenos poco conocidos. 
+% Aquí se hace referencia a rating alto con popularidad baja.
+aBuenoPoco(Lista):- 
+  findall(Anime, (rating(Anime,R),R>3,popularidad(Anime,P),P<6), Lista).  
+
+% Funcion para poder agregar a la base de datos un anime con su género y rating, 
+% si no está en la misma. La popularidad es opcional especificarla al agregarlo y por defecto es 1.
 estaAnime(An):- anime(An), !, write("Lo conozco perro "),
 write(An), write(" tiene rating "), rating(An,R), write(R), 
 write(" y genero "), generoAnime(An,Gen), write(Gen), 
@@ -104,31 +118,34 @@ estaAnime(An):- write(" Ni idea de que me hablas bro, cual es su rating? "), nl,
 read(R), nl, write("y su genero? "), read(Gadi), genero(Gadi),!, write(Gadi), assert(anime(An)), 
 assert(generoAnime(An,Gadi)), assert(rating(An,R)),assert(popularidad(An,1)).
 
-% interesante, pero popularidad 
-popIntString(P):- (P==1;P==2), write("Muy Poco Conocido"),!;
-                  (P==3;P==4;P==5), write("Poco Conocido"),!;
-                  (P==6;P==7), write("Conocido"),!;
-                  (P==8;P==9), write("Muy Conocido"),!;
-                   P==10, write("Bastante Conocido"),!.
+% Para devolver mensaje. 
+popIntString(P):- (P==1;P==2), write("muy poco conocido"),!;
+                  (P==3;P==4;P==5), write("poco conocido"),!;
+                  (P==6;P==7), write("conocido"),!;
+                  (P==8;P==9), write("muy conocido"),!;
+                   P==10, write("bastante conocido"),!.
 
-%  variable Popularidad Mensaje
-%      1 – 2    “Muy poco conocido”
-muyPocoConocido:- findall( Anime, popularidad(Anime, 1); popularidad(Anime, 2), ListaMuyPoco), 
-                  write("Estos son los muy poco conocidos "), write(ListaMuyPoco).
-%      3 – 5     “Poco conocido”
-pocoConocido:- findall( Anime, popularidad(Anime, 3); popularidad(Anime, 4); popularidad(Anime, 5), ListaPoco), 
-               write("Estos son los poco conocidos "), write(ListaPoco).
-%      6 – 7       “Conocido”
-conocido:- findall( Anime, popularidad(Anime, 6); popularidad(Anime, 7), ListaCon), 
-           write("Estos son los conocidos "), write(ListaCon).
-%      8 – 9     “Muy conocido”
-muyConocido:- findall( Anime, popularidad(Anime, 8); popularidad(Anime, 9), ListaMuyCon), 
-              write("Estos son los muy conocidos "), write(ListaMuyCon).
-%        10    “Bastante conocido”
-bastanteConocido:- findall( Anime, popularidad(Anime, 10), ListaBastante), 
-                  write("Estos son los bastante conocidos "), write(ListaBastante).
+% Funcion para subir la popularidad del anime si los usuarios preguntan por él 5 o más veces.
+
+% Predicado que actualiza la cantidad de veces que se ha preguntado por un anime.
+consultado(Anime,N) :- retract(consultado(Anime, N)), Consultas is N+1, assert(preguntado(Anime,Consultas)), !.
+
+% Predicado que reinicia el valor de Veces a 0 cuando ya se ha preguntado 5 veces por un anime.
+pregCero(Anime) :- retract(preguntado(Anime, _)), VecesNuevo is 0, assertz(preguntado(Anime,VecesNuevo)), !.
+
+% Predicado que aumenta en uno (1) la popularidad de un anime dado
+subirPop(Anime) :- preguntado(Anime, Veces), Veces > 4, retract(popularidad(Anime, Nivel)), NivelNuevo is Nivel+1, assertz(popularidad(Anime,NivelNuevo)), pregCero(Anime), !.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Main
-%anibot:- 
-readList(L):- read_line_to_codes(user_input,Cs), atom_codes(A, Cs), atomic_list_concat(L, ' ', A).
+aniBot:- write("Bienvenido soy AniBot hablame: -> "),
+             repeat,
+                readln(X), nl,
+                emitirRespuestaAutomata(X, Respuesta),
+                transform_to_string(Respuesta, Salida),
+                write(Salida),
+            se_salio(Salida),
+            !.
+            
+:- aniBot,nl,nl.
